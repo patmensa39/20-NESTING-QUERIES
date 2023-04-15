@@ -1,0 +1,171 @@
+/* 20 NESTING QUERIES  
+AGGREGATED SUBQUERIES 
+Created by Patrick Mensah 
+Date Created: 04/13/2023
+Description:  Subqueries \ Gather data about all the invoices that are less than this average?
+*/
+
+SELECT 
+    ROUND(AVG(Total),2) AS 'Average Total'
+FROM
+    Invoice
+    
+--This gave us 8.06
+--Now we want to gather data about all the invoices that are less than this average
+--Assuming we have this codes 
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BilllingCity,
+    Total
+FROM
+    Invoice
+WHERE
+    Total <
+    
+ORDER BY 
+    Total DESC
+    
+
+--We then insert the code top code into the down one 
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BillingCity,
+    Total
+FROM
+    Invoice
+WHERE
+    Total <
+    (SELECT AVG(Total) FROM Invoice)
+ORDER BY 
+    Total DESC
+    
+
+--Assuming we want to know how each individual city is performing against the global average sales 
+
+SELECT 
+        BillingCity,
+        ROUND(AVG(Total),2) AS 'City Average',
+        (SELECT ROUND(AVG(Total),2) FROM Invoice) AS 'Global Average'
+FROM
+    Invoice
+GROUP BY
+    BillingCity
+ORDER BY 
+    BillingCity 
+    
+
+
+
+--NON-AGGREGATED SUBQUERIES 
+--SUBQUERIES WITHOUT AGGREGATE FUNCTION
+SELECT 
+    InvoiceDate
+FROM
+    Invoice
+WHERE
+    InvoiceId =251
+    
+--Assuming we want to see if there are any other invoices that were recieved after the incoice date referenced here, we do it this way 
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BillingCity
+FROM
+    Invoice
+WHERE
+    InvoiceDate >
+    (SELECT 
+    InvoiceDate
+FROM
+    Invoice
+WHERE
+    InvoiceId =251)
+
+    
+--IN CLAUSE SUBQUERY 
+--Returning multiple values from a subquery
+SELECT 
+    InvoiceDate
+FROM 
+    Invoice
+WHERE
+    InvoiceId IN (251, 252, 254)
+--This results shows the invoice dates  that are associated with these invoiceids 
+-- If we want to select all invoices for those three days, we write a new query 
+
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BillingCity
+FROM
+    Invoice
+WHERE
+    InvoiceDate IN
+    (SELECT 
+    InvoiceDate
+FROM 
+    Invoice
+WHERE
+    InvoiceId IN (251, 252, 254))
+    
+
+
+--This is also the same as the code above
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BillingCity
+FROM
+    Invoice
+WHERE
+    InvoiceId IN (251, 252, 254)
+
+
+--What is this code doing here. 
+
+SELECT 
+    InvoiceDate,
+    BillingAddress,
+    BillingCity
+FROM
+    Invoice
+WHERE
+    InvoiceDate >
+    (SELECT 
+    InvoiceDate
+FROM 
+    Invoice
+WHERE
+    InvoiceId IN (251, 252, 254))
+    
+
+--SUBQUERIES AND DISTINCT \ Assuming we want to know which tracks are not selling
+---We want to only show distinct Ids
+
+SELECT 
+    DISTINCT
+    TrackId
+FROM
+     InvoiceLine
+ORDER BY
+    TrackId
+
+--now we need a query that's going to list all tracks from our track table, that are not in this particular list. 
+SELECT 
+    TrackId,
+    Composer,
+    Name
+FROM 
+    Track
+WHERE
+    TrackId
+NOT IN 
+(SELECT 
+    DISTINCT
+    TrackId
+FROM
+     InvoiceLine
+ORDER BY
+    TrackId)
